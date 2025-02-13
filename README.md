@@ -6,7 +6,13 @@ kamal is plugin for sublime text to check syntax errors and variable errors in p
 
 ### Syntax Checker :-
 
-Open sublime Packages directory. (Preferences > Browse packages...) Then install `jedi` module with pip.
+Open sublime Packages directory. (Preferences > Browse packages...)
+
+For Linux
+```sh
+cd ~/.config/sublime-text/Packages/User
+```
+Then install `jedi` module with pip.
 ```bash
 pip install jedi --target=jedi_lib
 ```
