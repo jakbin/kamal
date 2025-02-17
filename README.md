@@ -18,6 +18,12 @@ pip install jedi --target=jedi_lib
 ```
 Then download and move `syntax_checker.py` file also in that directory.
 
+### Auto Completion :- 
+
+Install jedi using above method.
+
+Then download and move `auto_completion.py` file also in that directory.
+
 ### Variable Errors Checker :- 
 
 Open sublime Packages directory. (Preferences > Browse packages...)
