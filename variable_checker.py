@@ -17,7 +17,8 @@ class UndefinedVariableChecker(ast.NodeVisitor):
         self.assigned_vars = set()
         self.exception_vars = set()
         self.comprehension_vars = set()  # Track comprehension variables
-
+        self.function_args = set()  # Track variables passed as function arguments
+        
         # Add all special Python variables
         self.special_vars = {
             '__name__',
@@ -77,6 +78,22 @@ class UndefinedVariableChecker(ast.NodeVisitor):
             return True
             
         return False
+            
+    def is_function_argument(self, node):
+        """Check if a Name node is being used as a function argument"""
+        # Walk up to find parent of the current node
+        for parent in ast.walk(self.current_tree):
+            for field, value in ast.iter_fields(parent):
+                if isinstance(value, list) and node in value:
+                    # If parent is a Call node and the node is in the args or keywords
+                    if isinstance(parent, ast.Call) and (field == 'args' or field == 'keywords'):
+                        return True
+                elif value == node:
+                    if isinstance(parent, ast.Call) and (field == 'args' or field == 'keywords'):
+                        return True
+                    if isinstance(parent, ast.keyword):
+                        return True
+        return False
 
     def visit_Name(self, node):
         if isinstance(node.ctx, ast.Store):
@@ -87,6 +104,10 @@ class UndefinedVariableChecker(ast.NodeVisitor):
             if self.is_special_var(node.id):
                 return
 
+            # Check if it's a function argument to avoid false positives
+            if self.is_function_argument(node):
+                self.function_args.add(node.id)
+                
             is_defined = (
                 any(node.id in scope for scope in self.scope_vars) or
                 node.id in self.defined_vars or
@@ -96,7 +117,8 @@ class UndefinedVariableChecker(ast.NodeVisitor):
                 node.id in self.assigned_vars or
                 node.id in self.from_imports or
                 node.id in self.exception_vars or
-                node.id in self.comprehension_vars  # Check comprehension variables
+                node.id in self.comprehension_vars or  # Check comprehension variables
+                node.id in self.function_args  # Don't flag function arguments as undefined
             )
             if not is_defined:
                 # Don't add to undefined if it's a comprehension variable
@@ -191,6 +213,29 @@ class UndefinedVariableChecker(ast.NodeVisitor):
         self.generic_visit(node)
         self.scope_vars.pop()
 
+    # Support for async functions
+    def visit_AsyncFunctionDef(self, node):
+        # Same implementation as visit_FunctionDef
+        self.defined_functions.add(node.name)
+        self.scope_vars[-1].add(node.name)
+        
+        # Create new scope for function arguments and body
+        function_scope = set()
+        
+        # Add arguments to the new scope
+        for arg in node.args.args:
+            function_scope.add(arg.arg)
+            
+        # Handle varargs and kwargs
+        if node.args.kwarg:
+            function_scope.add(node.args.kwarg.arg)
+        if node.args.vararg:
+            function_scope.add(node.args.vararg.arg)
+            
+        self.scope_vars.append(function_scope)
+        self.generic_visit(node)
+        self.scope_vars.pop()
+
     def visit_Import(self, node):
         for alias in node.names:
             if alias.asname:
@@ -212,6 +257,20 @@ class UndefinedVariableChecker(ast.NodeVisitor):
 
     def visit_Module(self, node):
         self.current_tree = node
+        self.generic_visit(node)
+
+    # Add support for call functions to track arguments
+    def visit_Call(self, node):
+        # Process all arguments
+        for arg in node.args:
+            if isinstance(arg, ast.Name):
+                self.function_args.add(arg.id)
+                
+        # Process keyword arguments
+        for keyword in node.keywords:
+            if isinstance(keyword.value, ast.Name):
+                self.function_args.add(keyword.value.id)
+                
         self.generic_visit(node)
 
 class CheckUndefinedVariablesCommand(sublime_plugin.TextCommand):
@@ -253,9 +312,9 @@ def check_undefined_variables(view):
                     if idx == -1:
                         break
                     # Make sure we found a whole word
-                    if (idx == 0 or not line_text[idx-1].isalnum()) and \
+                    if (idx == 0 or not line_text[idx-1].isalnum() and line_text[idx-1] != '_') and \
                        (idx + len(var_name) == len(line_text) or \
-                        not line_text[idx + len(var_name)].isalnum()):
+                        not line_text[idx + len(var_name)].isalnum() and line_text[idx + len(var_name)] != '_'):
                         regions.append(sublime.Region(
                             line_region.begin() + idx,
                             line_region.begin() + idx + len(var_name)
