@@ -1,0 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jedi library
+jedi_lib/
+
+# Sublime Text specific
+*.sublime-workspace
+*.sublime-project
