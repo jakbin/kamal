@@ -2,6 +2,16 @@
 
 kamal is plugin for sublime text to check syntax errors, variable errors and auto completion in python code.
 
+## Installation
+
+### Install via Package Control (Recommended)
+
+1. Open the Command Palette in Sublime Text (`Ctrl+Shift+P` or `Cmd+Shift+P`).
+2. Select `Package Control: Install Package`.
+3. Search for `kamal` and install it.
+
+---
+
 ## How to use :-
 
 ### Syntax Errors Checker :-
