@@ -3,12 +3,15 @@ import sys
 import sublime
 import sublime_plugin
 
-PLUGIN_DIR = os.path.dirname(__file__)
-JEDI_LIB_PATH = os.path.join(PLUGIN_DIR, "jedi_lib")
-if JEDI_LIB_PATH not in sys.path:
-    sys.path.append(JEDI_LIB_PATH)
+try:
+    import jedi
+except ImportError:
+    PLUGIN_DIR = os.path.dirname(__file__)
+    JEDI_LIB_PATH = os.path.join(PLUGIN_DIR, "jedi_lib")
+    if JEDI_LIB_PATH not in sys.path:
+        sys.path.append(JEDI_LIB_PATH)
+    import jedi
 
-import jedi
 
 ENVIRONMENT = jedi.get_system_environment("3")
 

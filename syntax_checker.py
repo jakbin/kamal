@@ -3,12 +3,15 @@ import sublime_plugin
 import os
 import sys
 
-PLUGIN_DIR = os.path.dirname(__file__)
-JEDI_LIB_PATH = os.path.join(PLUGIN_DIR, "jedi_lib")
-if JEDI_LIB_PATH not in sys.path:
-    sys.path.append(JEDI_LIB_PATH)
+try:
+    import jedi
+except ImportError:
+    PLUGIN_DIR = os.path.dirname(__file__)
+    JEDI_LIB_PATH = os.path.join(PLUGIN_DIR, "jedi_lib")
+    if JEDI_LIB_PATH not in sys.path:
+        sys.path.append(JEDI_LIB_PATH)
+    import jedi
 
-import jedi
 
 class JediSyntaxErrorHighlighter(sublime_plugin.EventListener):
     def __init__(self):
