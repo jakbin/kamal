@@ -20,22 +20,43 @@ class JediAutocompleteListener(sublime_plugin.EventListener):
         if not view.match_selector(locations[0], "source.python"):
             return []
 
-        file_content = view.substr(sublime.Region(0, view.size()))
+        try:
 
-        script = jedi.Script(
-            code=file_content, path=view.file_name(), environment=ENVIRONMENT
-        )
+            file_content = view.substr(sublime.Region(0, view.size()))
+            
+            # Get the cursor position (line and column)
+            cursor_pos = locations[0]
+            line, column = view.rowcol(cursor_pos)
+            
+            # Jedi uses 1-based line numbering
+            line += 1
 
-        completions = script.complete()
-        suggestions = [
-            (
-                "{}\t{}".format(comp.name, comp.type),
-                comp.name
+            script = jedi.Script(
+                code=file_content, 
+                path=view.file_name(), 
+                environment=ENVIRONMENT
             )
-            for comp in completions
-        ]
 
-        return suggestions
+            # Get completions at the specific cursor position
+            completions = script.complete(line=line, column=column)
+            
+            suggestions = []
+            for comp in completions:
+                # Create more informative completion entries
+                trigger = comp.name
+                contents = comp.name
+                
+                # Add type information to the trigger for better display
+                if comp.type:
+                    trigger = f"{comp.name}\t{comp.type}"
+                
+                suggestions.append((trigger, contents))
+
+            return suggestions
+
+        except Exception as e:
+            print(f"Jedi completion error: {e}")
+            return []
 
     def on_hover(self, view, point, hover_zone):
         """
