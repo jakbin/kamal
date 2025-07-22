@@ -12,6 +12,11 @@ except ImportError:
         sys.path.append(JEDI_LIB_PATH)
     import jedi
 
+try:
+    ENVIRONMENT = jedi.get_system_environment("3")
+except jedi.api.environment.InvalidPythonEnvironment:
+    ENVIRONMENT = jedi.get_default_environment()
+
 
 class JediSyntaxErrorHighlighter(sublime_plugin.EventListener):
     def __init__(self):
@@ -33,7 +38,7 @@ class JediSyntaxErrorHighlighter(sublime_plugin.EventListener):
         self.error_messages = {}
 
         try:
-            script = jedi.Script(code=file_content, path=file_path, environment=jedi.get_system_environment("3"))
+            script = jedi.Script(code=file_content, path=file_path, environment=ENVIRONMENT)
             syntax_errors = script.get_syntax_errors()
 
             error_regions = []
