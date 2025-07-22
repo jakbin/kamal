@@ -1,8 +1,5 @@
 import os
 import sys
-
-import jedi.api
-import jedi.api.environment
 import sublime
 import sublime_plugin
 
@@ -19,6 +16,7 @@ try:
     ENVIRONMENT = jedi.get_system_environment("3")
 except jedi.api.environment.InvalidPythonEnvironment:
     ENVIRONMENT = jedi.get_default_environment()
+
 
 class JediAutocompleteListener(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
