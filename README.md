@@ -12,7 +12,7 @@ kamal is plugin for sublime text to check syntax errors, variable errors and aut
 
 ---
 
-## How to use :-
+## Manual installation :-
 
 ### Syntax Errors Checker :-
 
